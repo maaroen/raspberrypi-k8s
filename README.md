@@ -49,6 +49,8 @@ Next I installed Oh-My-Zsh just for a nicer terminal experience:
 
 ```
 sudo apt-get install vim
+sudo snap install helm --classic
+sudo apt install fonts-powerline
 sudo apt install zsh
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
@@ -62,3 +64,45 @@ And I configured the .zshrc file: `sudo vim ~/.zshrc`
 Here setup the plugins like this: `plugins=(git zsh-syntax-highlighting zsh-autosuggestions fzf)`
 
 And set the theme to `wedisagree`
+
+### Initial kubernetes cluster setup
+The steps I took to setup the kubernetes cluster:
+```
+sudo apt install -y docker.io
+sudo systemctl enable docker
+
+sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+
+sudo swapoff -a
+sudo vim /etc/fstab
+Inside this file, comment out the /swapfile line by preceeding it with a # symbol, as seen below. Then, close this file and save the changes.
+```
+
+Enable the systemd cgroup driver for docker:
+```
+sudo touch /etc/docker/daemon.json
+sudo vim /etc/docker/daemon.json
+# add the following content:
+
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+```
+
+Append the cgroup and swap options to the kernal command line:
+`sudo sed -i '$ s/$/ cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1 swapaccount=1/' /boot/firmware/cmdline.txt`
+
+Enable net.bridge.bridge-nf-call-iptables and -iptables6:
+```
+sudo touch /etc/sysctl.d/k8s.conf
+sudo vim /etc/sysctl.d/k8s.conf
+
+# add the following content:
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+```
