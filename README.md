@@ -106,3 +106,33 @@ sudo vim /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 ```
+```
+sudo sysctl --system
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+```
+Add the kubernetes repo
+```
+sudo touch /etc/apt/sources.list.d/kubernetes.list
+sudo vim /etc/apt/sources.list.d/kubernetes.list
+
+# add the following content:
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+```
+
+Install kubernetes tools, and put upgrading on hold
+```
+sudo apt update && sudo apt install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+```
+
+Generate cluster token, and start initializing the cluster
+```
+TOKEN=$(sudo kubeadm token generate)
+echo $TOKEN
+sudo kubeadm init --token=$TOKEN --kubernetes-version=v1.19.3 --pod-network-cidr=10.244.0.0/16 --node-name master
+```
+
+Install Flannel for networking:
+```
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
