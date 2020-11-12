@@ -1,0 +1,42 @@
+kubectl taint node master node-role.kubernetes.io/master:NoSchedule-
+kubectl create namespace ingress-nginx
+kubectl label nodes master master=true
+
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+
+helm install --set controller.hostNetwork=true --set controller.hostPort.enabled=true --set controller.extraArgs.enable-ssl-passthrough="" --set controller.replicaCount=1 --set-string controller.nodeSelector.master=true --namespace ingress-nginx ingress-nginx ingress-nginx/ingress-nginx
+
+
+
+resource "helm_release" "ingress-nginx" {
+  name  = "ingress-nginx"
+  chart = "ingress-nginx/ingress-nginx"
+  repository = "https://kubernetes-charts.storage.googleapis.com"
+  namespace = "ingress-nginx"
+
+  set {
+    name  = "controller.hostNetwork"
+    value = true
+  }
+
+  set {
+    name  = "controller.hostPort.enabled"
+    value = true
+  }
+
+  set {
+    name  = "controller.extraArgs.enable-ssl-passthrough"
+    value = ""
+  }
+
+  set {
+    name  = "controller.replicaCount"
+    value = 1
+  }
+
+  set_string {
+    name  = "controller.nodeSelector.master"
+    value = true
+  }
+}

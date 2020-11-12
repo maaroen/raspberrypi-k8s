@@ -1,0 +1,68 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  namespace: default
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: jeroennederlof1@msn.com
+
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod
+
+    # ACME DNS-01 provider configurations
+    solvers:
+    # An empty 'selector' means that this solver matches all domains
+    # We only use cloudflare to solve challenges for example.org.
+    # Alternative options such as 'matchLabels' and 'dnsZones' can be specified
+    # as part of a solver's selector too.
+    #- selector:
+     #   dnsZones:
+      #  - 'jeroennederlof.nl'
+    - dns01:
+        webhook:
+          groupName: cert-manager.webhook.transip
+          solverName: transip
+          config:
+            accountName: maaroen
+            ttl: 300
+            privateKeySecretRef:
+              name: transip-credentials
+              key: privateKey
+  
+---
+#apiVersion: cert-manager.io/v1
+#kind: Certificate
+#metadata:
+#  name: wildcard-certificate
+#  namespace: default
+#spec:
+#  secretName: wildcard-tls-secret
+#  issuerRef:
+#    name: letsencrypt-prod
+#    kind: ClusterIssuer
+#  dnsNames:
+#  - '*.jeroennederlof.nl'
+#  - jeroennederlof.nl
+
+#apiVersion: certmanager.k8s.io/v1alpha1
+#kind: Certificate
+#metadata:
+#  name: my-certificate
+#spec:
+#  secretName: tls-secret
+#  issuerRef:
+#    name: letsencrypt-staging
+#  commonName: jeroennederlof.nl
+#  dnsNames:
+#  - jeroennederlof.nl
+#  - "*.jeroennederlof.nl"
+#  acme:
+#    config:
+#    - dns01:
+#        provider: cf-dns
+#      domains:
+#        - jeroennederlof.nl
+#        - "*.jeroennederlof.nl"
