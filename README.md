@@ -135,4 +135,21 @@ sudo kubeadm init --token=$TOKEN --kubernetes-version=v1.19.3 --pod-network-cidr
 Install Flannel for networking:
 ```
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
 ```
+Create a file in "/etc/systemd/network" named "50-flannel.link"
+With the following content:
+```
+[Match]
+OriginalName=flannel*
+[Link]
+MACAddressPolicy=none
+```
+
+Edit /etc/sysctl.conf (this fixes forwarding network traffic to make sure communication between pods works correctly)
+Add the line:
+```
+net.ipv4.ip_forward=1
+```
+reboot the pi
+
